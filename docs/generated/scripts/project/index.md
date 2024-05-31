@@ -6,10 +6,10 @@
 
 <div class="mkd-glr-thumbcontainer" tooltip="Surrogate modeling">
     <!--div class="figure align-default" id="id1"-->
-        <img alt="Surrogate modeling" src="images/thumb/mkd_glr_surrogate_model_thumb.png" />
+        <img alt="Surrogate modeling" src="images/thumb/mkd_glr_problem1_thumb.png" />
         <p class="caption">
             <span class="caption-text">
-                <a class="reference internal" href="surrogate_model">
+                <a class="reference internal" href="problem1">
                     <span class="std std-ref">Surrogate modeling</span>
                 </a>
             </span>
