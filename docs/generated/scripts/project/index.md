@@ -18,6 +18,20 @@
     <!--/div-->
 </div>
 
+<div class="mkd-glr-thumbcontainer" tooltip="problem2">
+    <!--div class="figure align-default" id="id1"-->
+        <img alt="problem2" src="images/thumb/mkd_glr_problem2_thumb.png" />
+        <p class="caption">
+            <span class="caption-text">
+                <a class="reference internal" href="problem2">
+                    <span class="std std-ref">problem2</span>
+                </a>
+            </span>
+            <!--a class="headerlink" href="#id1" title="Permalink to this image"></a-->
+        </p>
+    <!--/div-->
+</div>
+
 <div class="mkd-glr-clear"></div>
 
 

@@ -1,6 +1,7 @@
 """
 Surrogate modeling
 """
+# %%
 
 from numpy import array
 import pickle
@@ -17,7 +18,7 @@ from gemseo import import_discipline
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
-
+from gemseo.uncertainty.sensitivity.sobol.analysis import SobolAnalysis
 from lh2pac.marilib.utils import unit
 
 # %%
