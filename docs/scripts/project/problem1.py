@@ -25,7 +25,7 @@ from lh2pac.marilib.utils import unit
 #%%
 # ## Désactivations des fonctionnalités non utlisées de Gemseo
 
-configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=False, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
+#configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
 # %%
 # ## Airplane initialization
 # First, we instantiate the discipline:
@@ -159,5 +159,14 @@ scenario_surrogate.execute({"algo": "NLOPT_COBYLA", "max_iter": 1000})
 # we can plot the optimization history:
 scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 
+# %%
+# We can print the aircraft data:
+discipline.execute(surrogate_discipline.get_input_data())
+aircraft_data = get_aircraft_data(discipline)
+print(aircraft_data)
+
+# %%
+# and draw the aircraft:
+draw_aircraft(discipline, "The optimized A/C")
 
 # %%

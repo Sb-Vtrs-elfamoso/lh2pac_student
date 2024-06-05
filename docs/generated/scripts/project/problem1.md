@@ -15,7 +15,7 @@
 
 Surrogate modeling
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 5-24 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 5-25 -->
 
 ```{.python }
 
@@ -31,43 +31,55 @@ from gemseo import configure_logger
 from gemseo import create_scenario
 from gemseo import create_surrogate
 from gemseo import import_discipline
+from gemseo import configure
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
-
+from gemseo.uncertainty.sensitivity.sobol.analysis import SobolAnalysis
 from lh2pac.marilib.utils import unit
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 25-27 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 26-27 -->
+
+## Désactivations des fonctionnalités non utlisées de Gemseo
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 27-29 -->
+
+```{.python }
+
+#configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 30-32 -->
 
 ## Airplane initialization
 First, we instantiate the discipline:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 27-29 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 32-34 -->
 
 ```{.python }
 discipline = H2TurboFan()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 30-32 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 35-37 -->
 
 Then,
 we can have a look at its input names:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 32-34 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 37-39 -->
 
 ```{.python }
 discipline.get_input_data_names()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 35-36 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 40-41 -->
 
 output names:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 36-39 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 41-44 -->
 
 ```{.python }
 output_parameters = discipline.get_output_data_names()
@@ -75,33 +87,33 @@ print(output_parameters)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 40-41 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 45-46 -->
 
 and default input values:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 41-43 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 46-48 -->
 
 ```{.python }
 discipline.default_inputs
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 44-45 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 49-50 -->
 
 and execute the discipline with these values:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 45-47 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 50-52 -->
 
 ```{.python }
 discipline.execute()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 48-49 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 53-54 -->
 
 We can print the aircraft data:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 49-52 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 54-57 -->
 
 ```{.python }
 aircraft_data = get_aircraft_data(discipline)
@@ -109,23 +121,23 @@ print(aircraft_data)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 53-54 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 58-59 -->
 
 and draw the aircraft:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 54-56 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 59-61 -->
 
 ```{.python }
 draw_aircraft(discipline, "The default A/C")
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 57-59 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 62-64 -->
 
 ## Design of experiment
 we activate the logger.
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 59-73 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 64-78 -->
 
 ```{.python }
 configure_logger()
@@ -144,12 +156,12 @@ design_space = MyDesignSpace()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 74-76 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 79-81 -->
 
 Thirdly,
 we create a `DOEScenario` from this discipline and this design space:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 76-83 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 81-88 -->
 
 ```{.python }
 disciplines = [discipline]
@@ -161,26 +173,26 @@ for parameter in  output_parameters[1:] :
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 84-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 89-91 -->
 
 Now,
 we can sample the discipline to get 100 evaluations of the airplane parameters :
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 86-88 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 91-93 -->
 
 ```{.python }
 scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 100})
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 89-93 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 94-98 -->
 
 Lastly,
 we can export the result to an `IODataset`
 which is a subclass of `Dataset`,
 which is a subclass of `pandas.DataFrame`:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 93-96 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 98-101 -->
 
 ```{.python }
 dataset = scenario.to_dataset(opt_naming=False)
@@ -188,23 +200,23 @@ dataset
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 97-99 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 102-104 -->
 
 ## Surrogate modeling
 before creating a surrogate discipline:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 99-101 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 104-106 -->
 
 ```{.python }
 surrogate_discipline = create_surrogate("RBFRegressor", dataset)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 102-103 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 107-108 -->
 
 and using it for prediction:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 103-106 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 108-111 -->
 
 ```{.python }
 surrogate_discipline.execute({"x": array([1.0])})
@@ -212,13 +224,13 @@ surrogate_discipline.cache.last_entry
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 107-110 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 112-115 -->
 
 This surrogate discipline can be used in a scenario.
 The underlying regression model can also be assessed,
 with the R2 measure for instance:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 110-114 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 115-119 -->
 
 ```{.python }
 r2 = R2Measure(surrogate_discipline.regression_model, True)
@@ -227,11 +239,11 @@ print(r2.compute_cross_validation_measure())
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 115-116 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 120-121 -->
 
 or with the root mean squared error:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 116-120 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 121-125 -->
 
 ```{.python }
 rmse = RMSEMeasure(surrogate_discipline.regression_model, True)
@@ -240,11 +252,11 @@ print(rmse.compute_cross_validation_measure())
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 121-122 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 126-127 -->
 
 Saving model and testing
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 122-129 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 127-134 -->
 
 ```{.python }
 with Path("my_surrogate.pkl").open("wb") as f:
@@ -256,7 +268,7 @@ surrogate_discipline.get_output_data()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 130-136 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 135-141 -->
 
 Thirdly,
 we put these elements together in a scenario
@@ -265,7 +277,7 @@ under the constraint that the distance
 between the design point and the solution of the unconstrained problem
 is greater or equal to 1.
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 136-148 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 141-153 -->
 
 ```{.python }
 scenario_surrogate = create_scenario([surrogate_discipline], "DisciplinaryOpt", output_parameters[0], design_space)
@@ -282,27 +294,50 @@ scenario_surrogate.add_constraint("far", constraint_type="ineq", positive=False,
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 149-150 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 154-155 -->
 
 before executing it with a gradient-free optimizer:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 150-152 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 155-157 -->
 
 ```{.python }
 scenario_surrogate.execute({"algo": "NLOPT_COBYLA", "max_iter": 1000})
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 153-155 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 158-160 -->
 
 Lastly,
 we can plot the optimization history:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 155-158 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 160-162 -->
 
 ```{.python }
 scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 163-164 -->
+
+We can print the aircraft data:
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 164-168 -->
+
+```{.python }
+discipline.execute(surrogate_discipline.get_input_data())
+aircraft_data = get_aircraft_data(discipline)
+print(aircraft_data)
+
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 169-170 -->
+
+and draw the aircraft:
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 170-172 -->
+
+```{.python }
+draw_aircraft(discipline, "The optimized A/C")
 
 ```
 
