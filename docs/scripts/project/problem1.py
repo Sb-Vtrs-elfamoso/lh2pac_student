@@ -15,12 +15,17 @@ from gemseo import configure_logger
 from gemseo import create_scenario
 from gemseo import create_surrogate
 from gemseo import import_discipline
+from gemseo import configure
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
 from gemseo.uncertainty.sensitivity.sobol.analysis import SobolAnalysis
 from lh2pac.marilib.utils import unit
 
+#%%
+# ## Désactivations des fonctionnalités non utlisées de Gemseo
+
+configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=False, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
 # %%
 # ## Airplane initialization
 # First, we instantiate the discipline:
