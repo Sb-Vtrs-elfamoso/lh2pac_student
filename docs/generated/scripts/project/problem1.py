@@ -161,12 +161,9 @@ scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 
 # %%
 # We can print the aircraft data:
-discipline.execute(surrogate_discipline.get_input_data())
-aircraft_data = get_aircraft_data(discipline)
-print(aircraft_data)
+print(surrogate_discipline.get_input_data())
 
 # %%
 # and draw the aircraft:
-draw_aircraft(discipline, "The optimized A/C")
+draw_aircraft(surrogate_discipline.get_input_data(), "The optimized A/C")
 
-# %%

@@ -321,23 +321,21 @@ scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 
 We can print the aircraft data:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 164-168 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 164-166 -->
 
 ```{.python }
-discipline.execute(surrogate_discipline.get_input_data())
-aircraft_data = get_aircraft_data(discipline)
-print(aircraft_data)
+print(surrogate_discipline.get_input_data())
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 169-170 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 167-168 -->
 
 and draw the aircraft:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 170-172 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 168-170 -->
 
 ```{.python }
-draw_aircraft(discipline, "The optimized A/C")
+draw_aircraft(surrogate_discipline.get_input_data(), "The optimized A/C")
 
 ```
 
