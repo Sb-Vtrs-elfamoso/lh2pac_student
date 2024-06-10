@@ -1,6 +1,7 @@
 """
-Problem 1 : Optimization
+Problem 3 : Robust optimization
 """
+
 # %%
 
 from numpy import array
@@ -19,6 +20,8 @@ from gemseo import configure
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
+from gemseo.algos.parameter_space import ParameterSpace
+from gemseo.algos.parameter_space import ParameterSpace
 from lh2pac.marilib.utils import unit
 
 #configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
@@ -59,16 +62,25 @@ draw_aircraft(discipline, "The default A/C")
 # we activate the logger.
 configure_logger()
 
-# we create the design space for design parameters $x$ :
-class MyDesignSpace(DesignSpace):
+# we create the design space for design parameters $x$ and technological parameters $u$ :
+class Design_Technological_Parameter_Space(DesignSpace, ParameterSpace):
     def __init__(self):
-        super().__init__(name="design_parameters_space")
+        super().__init__(name="design_and_technological_parameters_space")
+        # Design Parameters
         self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150))
         self.add_variable("bpr", l_b=5, u_b=12)
         self.add_variable("area", l_b=120, u_b=200)
         self.add_variable("aspect_ratio", l_b=7, u_b=12)
+        
+        # Technological Parameters
+        self.add_random_variable("tgi", "SPTriangularDistribution", minimum=0.25,mode=0.3, maximum=0.305)
+        self.add_random_variable("tvi", "SPTriangularDistribution", minimum=0.8,mode=0.845, maximum=0.85)
+        self.add_random_variable("sfc", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
+        self.add_random_variable("mass", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
+        self.add_random_variable("drag", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
+        
 
-design_space = MyDesignSpace()
+design_space = Design_Technological_Parameter_Space()
 
 
 # %%
@@ -160,6 +172,6 @@ scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 print(surrogate_discipline.get_input_data())
 
 # %%
-# and draw the aircraft:
+# and draw the optimized aircraft design:
 draw_aircraft(surrogate_discipline.get_input_data(), "The optimized A/C")
 

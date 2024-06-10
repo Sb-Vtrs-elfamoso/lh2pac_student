@@ -13,9 +13,9 @@
     to download the full example code
 
 
-problem2
+Problem 2 : Uncertainty quantification
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 5-28 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 5-27 -->
 
 ```{.python }
 
@@ -31,10 +31,9 @@ from gemseo import create_scenario
 from gemseo import create_surrogate
 from gemseo import import_discipline
 from gemseo.algos.design_space import DesignSpace
+from gemseo.algos.parameter_space import ParameterSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
-from gemseo.algos.parameter_space import ParameterSpace
-from gemseo.algos.parameter_space import ParameterSpace
 from gemseo_mlearning.api import sample_discipline
 
 
@@ -43,7 +42,7 @@ from lh2pac.marilib.utils import unit
 configure_logger()
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 29-33 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 28-32 -->
 
 ```{.python }
 
@@ -52,19 +51,19 @@ configure_logger()
 discipline = H2TurboFan()
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 34-36 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 33-35 -->
 
 Then,
 we can have a look at its input names:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 36-38 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 35-37 -->
 
 ```{.python }
 print('input data names : ')
 print(discipline.get_input_data_names())
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 39-43 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 38-42 -->
 
 ```{.python }
 
@@ -73,7 +72,7 @@ print('output params :')
 print(output_parameters)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 44-48 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 43-47 -->
 
 ```{.python }
 
@@ -82,7 +81,7 @@ print('default inputs :')
 print(discipline.default_inputs)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 49-52 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 48-51 -->
 
 ```{.python }
 
@@ -90,7 +89,7 @@ print(discipline.default_inputs)
 discipline.execute()
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 53-60 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 52-59 -->
 
 ```{.python }
 
@@ -102,7 +101,7 @@ print('aircraft data : ')
 print(aircraft_data)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 61-66 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 60-65 -->
 
 ```{.python }
 
@@ -112,7 +111,7 @@ draw_aircraft(discipline, "The default A/C")
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 67-76 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 66-75 -->
 
 ```{.python }
 class MyUncertainSpace(ParameterSpace):
@@ -126,21 +125,21 @@ class MyUncertainSpace(ParameterSpace):
         
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 77-79 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 76-78 -->
 
 ```{.python }
 uncertain_space = MyUncertainSpace()
 print(uncertain_space)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 80-82 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 79-81 -->
 
 ```{.python }
 dataset = sample_discipline(discipline, uncertain_space, ['mtow'], "OT_MONTE_CARLO", 100)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 83-91 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 82-90 -->
 
 ```{.python }
 
@@ -153,7 +152,7 @@ for name in names:
     print(name, mean[name][0], variance[name][0])
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 92-98 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 91-97 -->
 
 ```{.python }
 import matplotlib.pyplot as plt
@@ -164,11 +163,11 @@ for i,(ax, name) in enumerate(zip(axes.flatten(), names)):
 plt.show()
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 99-100 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 98-99 -->
 
 # compute Sobol indices
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 100-104 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 99-103 -->
 
 ```{.python }
 from gemseo.uncertainty.sensitivity.sobol.analysis import SobolAnalysis
@@ -177,7 +176,7 @@ sobol = SobolAnalysis([discipline],uncertain_space,100)
 sobol.compute_indices()
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 105-108 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 104-107 -->
 
 ```{.python }
 import pprint
@@ -185,17 +184,17 @@ pprint.pprint(sobol.first_order_indices)
 pprint.pprint(sobol.total_order_indices)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 109-110 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 108-109 -->
 
 ```{.python }
 sobol.plot("mtow",save=False,show=True)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 111-112 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 110-111 -->
 
 # sobol for surrogate model 
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 112-137 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 111-136 -->
 
 ```{.python }
 dataset_surro = sample_discipline(
@@ -225,14 +224,14 @@ surrogate_discipline = create_surrogate("RBFRegressor",dataset_surro)
 print(surrogate_discipline)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 138-140 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 137-139 -->
 
 ```{.python }
 sobol = SobolAnalysis([surrogate_discipline],uncertain_space,10000)
 sobol.compute_indices()
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 141-144 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 140-143 -->
 
 ```{.python }
 import pprint
@@ -240,17 +239,17 @@ pprint.pprint(sobol.first_order_indices)
 pprint.pprint(sobol.total_order_indices)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 145-146 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 144-145 -->
 
 ```{.python }
 sobol.plot("mtow",save=False,show=True)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 147-148 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 146-147 -->
 
 # Morris Analysis 
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 148-151 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 147-150 -->
 
 ```{.python }
 from gemseo.uncertainty.sensitivity.morris.analysis import MorrisAnalysis
@@ -258,7 +257,7 @@ morris_analysis = MorrisAnalysis([discipline], uncertain_space, 100)
 morris_analysis.compute_indices() 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 152-155 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 151-154 -->
 
 ```{.python }
 surrogate_morris_analysis = MorrisAnalysis([surrogate_discipline],uncertain_space,100)
@@ -266,14 +265,14 @@ surrogate_morris_analysis.compute_indices()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 156-158 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 155-157 -->
 
 ```{.python }
 morris_analysis.plot("mtow",save=False,show=True)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 159-160 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 158-159 -->
 
 ```{.python }
 surrogate_morris_analysis.plot("mtow",save=False,show=True)

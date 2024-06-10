@@ -1,5 +1,5 @@
 """
-Surrogate modeling
+Problem 1 : Optimization
 """
 # %%
 
@@ -19,11 +19,7 @@ from gemseo import configure
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
-from gemseo.uncertainty.sensitivity.sobol.analysis import SobolAnalysis
 from lh2pac.marilib.utils import unit
-
-#%%
-# ## Désactivations des fonctionnalités non utlisées de Gemseo
 
 #configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
 # %%
@@ -66,7 +62,7 @@ configure_logger()
 # we create the design space for design parameters $x$ :
 class MyDesignSpace(DesignSpace):
     def __init__(self):
-        super().__init__(name="foo")
+        super().__init__(name="design_parameters_space")
         self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150))
         self.add_variable("bpr", l_b=5, u_b=12)
         self.add_variable("area", l_b=120, u_b=200)
@@ -138,7 +134,7 @@ surrogate_discipline.get_output_data()
 # under the constraint that the distance
 # between the design point and the solution of the unconstrained problem
 # is greater or equal to 1.
-scenario_surrogate = create_scenario([surrogate_discipline], "DisciplinaryOpt", output_parameters[0], design_space)
+scenario_surrogate = create_scenario([surrogate_discipline], "DisciplinaryOpt", "mtow", design_space)
 for parameter in  output_parameters[1:] :
     scenario.add_observable(parameter)
 

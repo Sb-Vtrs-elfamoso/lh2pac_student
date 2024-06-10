@@ -1,5 +1,5 @@
 """
-problem2
+Problem 2 : Uncertainty quantification
 """
 # %%
 
@@ -15,10 +15,9 @@ from gemseo import create_scenario
 from gemseo import create_surrogate
 from gemseo import import_discipline
 from gemseo.algos.design_space import DesignSpace
+from gemseo.algos.parameter_space import ParameterSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
-from gemseo.algos.parameter_space import ParameterSpace
-from gemseo.algos.parameter_space import ParameterSpace
 from gemseo_mlearning.api import sample_discipline
 
 
