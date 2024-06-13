@@ -28,7 +28,6 @@ from lh2pac.gemseo.utils import draw_aircraft
 from lh2pac.gemseo.utils import get_aircraft_data
 
 from gemseo import configure_logger
-from gemseo import create_scenario
 from gemseo import create_surrogate
 from gemseo import import_discipline
 from gemseo import configure
@@ -36,10 +35,11 @@ from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
 from gemseo.algos.parameter_space import ParameterSpace
-from gemseo.algos.parameter_space import ParameterSpace
+from gemseo_umdo.scenarios.umdo_scenario import UMDOScenario
+
 from lh2pac.marilib.utils import unit
 
-#configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
+configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=False, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
 ```
 
 <!-- GENERATED FROM PYTHON SOURCE LINES 29-31 -->
@@ -128,214 +128,118 @@ draw_aircraft(discipline, "The default A/C")
 ## Design of experiment
 we activate the logger.
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 63-86 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 63-93 -->
 
 ```{.python }
 configure_logger()
+# we create the design space for design parameters $x$
+with Path("design_parameters.pkl").open("rb") as f:
+    optimized_design_parameters = pickle.load(f)
 
-# we create the design space for design parameters $x$ and technological parameters $u$ :
-class Design_Technological_Parameter_Space(DesignSpace, ParameterSpace):
+print(optimized_design_parameters)
+
+class MyDesignSpace(DesignSpace):
     def __init__(self):
-        super().__init__(name="design_and_technological_parameters_space")
-        # Design Parameters
-        self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150))
-        self.add_variable("bpr", l_b=5, u_b=12)
-        self.add_variable("area", l_b=120, u_b=200)
-        self.add_variable("aspect_ratio", l_b=7, u_b=12)
-        
-        # Technological Parameters
+        super().__init__(name="design_parameters_space")
+        self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150), value=optimized_design_parameters['thrust'])
+        self.add_variable("bpr", l_b=5, u_b=12, value=optimized_design_parameters['bpr'])
+        self.add_variable("area", l_b=120, u_b=200, value=optimized_design_parameters['area'])
+        self.add_variable("aspect_ratio", l_b=7, u_b=12, value=optimized_design_parameters['aspect_ratio'])
+
+design_space = MyDesignSpace()
+
+# we create the parameter space for technological parameters $u$      
+class MyUncertainSpace(ParameterSpace):
+    def __init__(self):
+        super().__init__()
         self.add_random_variable("tgi", "SPTriangularDistribution", minimum=0.25,mode=0.3, maximum=0.305)
         self.add_random_variable("tvi", "SPTriangularDistribution", minimum=0.8,mode=0.845, maximum=0.85)
         self.add_random_variable("sfc", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
         self.add_random_variable("mass", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
         self.add_random_variable("drag", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
         
-
-design_space = Design_Technological_Parameter_Space()
+uncertain_space = MyUncertainSpace()
 
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 87-89 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 94-96 -->
 
 Thirdly,
 we create a `DOEScenario` from this discipline and this design space:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 89-96 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 96-105 -->
 
 ```{.python }
 disciplines = [discipline]
-scenario = create_scenario(
-    disciplines, "DisciplinaryOpt", output_parameters[0], design_space, scenario_type="DOE"
+scenario = UMDOScenario(
+    disciplines, "DisciplinaryOpt", output_parameters[0], design_space, uncertain_space,
+    objective_statistic_name="Mean", statistic_estimation="Sampling", statistic_estimation_parameters={"n_samples": 50},
 )
+
 for parameter in  output_parameters[1:] :
-    scenario.add_observable(parameter)
+    scenario.add_observable(parameter, statistic_name="Mean")
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 97-99 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 106-107 -->
+
+adding constraints
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 107-115 -->
+
+```{.python }
+scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200, statistic_name="Mean")
+scenario.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137), statistic_name="Mean")
+scenario.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300), statistic_name="Mean")
+scenario.add_constraint("vz_mcr", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(0), statistic_name="Mean")
+scenario.add_constraint("oei_path", constraint_type="ineq", positive=True, value=0.011, statistic_name="Mean")
+scenario.add_constraint("ttc", constraint_type="ineq", positive=False, value=unit.s_min(25), statistic_name="Mean")
+scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.4, statistic_name="Mean")
+
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 116-118 -->
 
 Now,
-we can sample the discipline to get 100 evaluations of the airplane parameters :
+we execute the discipline with a gradient-free optimizer
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 99-101 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 118-120 -->
 
 ```{.python }
-scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 100})
+scenario.execute({"algo": "NLOPT_COBYLA", "max_iter": 30})
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 102-106 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 121-122 -->
 
-Lastly,
-we can export the result to an `IODataset`
-which is a subclass of `Dataset`,
-which is a subclass of `pandas.DataFrame`:
+plot the history:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 106-109 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 122-123 -->
 
 ```{.python }
-dataset = scenario.to_dataset(opt_naming=False)
-dataset
-
+scenario.post_process("OptHistoryView", save=True, show=True)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 110-112 -->
-
-## Surrogate modeling
-before creating a surrogate discipline:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 112-114 -->
-
-```{.python }
-surrogate_discipline = create_surrogate("RBFRegressor", dataset)
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 115-116 -->
-
-and using it for prediction:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 116-119 -->
-
-```{.python }
-surrogate_discipline.execute({"x": array([1.0])})
-surrogate_discipline.cache.last_entry
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 120-123 -->
-
-This surrogate discipline can be used in a scenario.
-The underlying regression model can also be assessed,
-with the R2 measure for instance:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 123-127 -->
-
-```{.python }
-r2 = R2Measure(surrogate_discipline.regression_model, True)
-print(r2.compute_learning_measure())
-print(r2.compute_cross_validation_measure())
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 128-129 -->
-
-or with the root mean squared error:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 129-133 -->
-
-```{.python }
-rmse = RMSEMeasure(surrogate_discipline.regression_model, True)
-print(rmse.compute_learning_measure())
-print(rmse.compute_cross_validation_measure())
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 134-135 -->
-
-Saving model and testing
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 135-142 -->
-
-```{.python }
-with Path("my_surrogate.pkl").open("wb") as f:
-    pickle.dump(surrogate_discipline, f)
-
-surrogate_discipline = import_discipline("my_surrogate.pkl")
-surrogate_discipline.execute({"x": array([1.0])})
-surrogate_discipline.get_output_data()
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 143-149 -->
-
-Thirdly,
-we put these elements together in a scenario
-to minimize the Rosenbrock function
-under the constraint that the distance
-between the design point and the solution of the unconstrained problem
-is greater or equal to 1.
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 149-161 -->
-
-```{.python }
-scenario_surrogate = create_scenario([surrogate_discipline], "DisciplinaryOpt", "mtow", design_space)
-for parameter in  output_parameters[1:] :
-    scenario.add_observable(parameter)
-
-scenario_surrogate.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200)
-scenario_surrogate.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137))
-scenario_surrogate.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300))
-scenario_surrogate.add_constraint("vz_mcr", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(0))
-scenario_surrogate.add_constraint("oei_path", constraint_type="ineq", positive=True, value=0.011)
-scenario_surrogate.add_constraint("ttc", constraint_type="ineq", positive=False, value=unit.s_min(25))
-scenario_surrogate.add_constraint("far", constraint_type="ineq", positive=False, value=13.4)
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 162-163 -->
-
-before executing it with a gradient-free optimizer:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 163-165 -->
-
-```{.python }
-scenario_surrogate.execute({"algo": "NLOPT_COBYLA", "max_iter": 1000})
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 166-168 -->
-
-Lastly,
-we can plot the optimization history:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 168-170 -->
-
-```{.python }
-scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 171-172 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 126-127 -->
 
 We can print the aircraft data:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 172-174 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 127-129 -->
 
 ```{.python }
-print(surrogate_discipline.get_input_data())
+print(discipline.get_input_data())
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 175-176 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 130-131 -->
 
-and draw the optimized aircraft design:
+and draw the aircraft:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 176-178 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 131-133 -->
 
 ```{.python }
-draw_aircraft(surrogate_discipline.get_input_data(), "The optimized A/C")
+draw_aircraft(discipline.get_input_data(), "The optimized A/C")
 
 ```
 

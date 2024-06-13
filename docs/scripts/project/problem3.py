@@ -24,7 +24,7 @@ from gemseo_umdo.scenarios.umdo_scenario import UMDOScenario
 
 from lh2pac.marilib.utils import unit
 
-configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
+configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=False, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
 # %%
 # ## Airplane initialization
 # First, we instantiate the discipline:
@@ -62,13 +62,18 @@ draw_aircraft(discipline, "The default A/C")
 # we activate the logger.
 configure_logger()
 # we create the design space for design parameters $x$
+with Path("design_parameters.pkl").open("rb") as f:
+    optimized_design_parameters = pickle.load(f)
+
+print(optimized_design_parameters)
+
 class MyDesignSpace(DesignSpace):
     def __init__(self):
         super().__init__(name="design_parameters_space")
-        self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150))
-        self.add_variable("bpr", l_b=5, u_b=12)
-        self.add_variable("area", l_b=120, u_b=200)
-        self.add_variable("aspect_ratio", l_b=7, u_b=12)
+        self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150), value=optimized_design_parameters['thrust'])
+        self.add_variable("bpr", l_b=5, u_b=12, value=optimized_design_parameters['bpr'])
+        self.add_variable("area", l_b=120, u_b=200, value=optimized_design_parameters['area'])
+        self.add_variable("aspect_ratio", l_b=7, u_b=12, value=optimized_design_parameters['aspect_ratio'])
 
 design_space = MyDesignSpace()
 

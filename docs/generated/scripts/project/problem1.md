@@ -308,23 +308,28 @@ scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 
 <!-- GENERATED FROM PYTHON SOURCE LINES 159-160 -->
 
-We can print the aircraft data:
+We can print and save the optimized aircraft data:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 160-162 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 160-166 -->
 
 ```{.python }
-print(surrogate_discipline.get_input_data())
+optimized_design_parameters = surrogate_discipline.get_input_data()
+print(optimized_design_parameters)
+
+with Path("design_parameters.pkl").open("wb") as f:
+    pickle.dump(optimized_design_parameters, f)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 163-164 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 167-168 -->
 
 and draw the aircraft:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 164-166 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 168-171 -->
 
 ```{.python }
-draw_aircraft(surrogate_discipline.get_input_data(), "The optimized A/C")
+draw_aircraft(optimized_design_parameters, "The optimized A/C")
+
 
 ```
 

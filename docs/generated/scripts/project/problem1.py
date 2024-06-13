@@ -156,10 +156,16 @@ scenario_surrogate.execute({"algo": "NLOPT_COBYLA", "max_iter": 1000})
 scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 
 # %%
-# We can print the aircraft data:
-print(surrogate_discipline.get_input_data())
+# We can print and save the optimized aircraft data:
+optimized_design_parameters = surrogate_discipline.get_input_data()
+print(optimized_design_parameters)
+
+with Path("design_parameters.pkl").open("wb") as f:
+    pickle.dump(optimized_design_parameters, f)
 
 # %%
 # and draw the aircraft:
-draw_aircraft(surrogate_discipline.get_input_data(), "The optimized A/C")
+draw_aircraft(optimized_design_parameters, "The optimized A/C")
 
+
+# %%
