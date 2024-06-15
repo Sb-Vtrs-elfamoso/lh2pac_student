@@ -15,13 +15,29 @@
 
 Problem 1 : Optimization
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 5-25 -->
+Here, the objective was to find a way to minimize the maximum take-off weight `MTOW` of $g:x\mapsto g(x)=f(x,u_{\mathrm{default}})$.
+
+The **design parameters**  $x$ are :
+
+- the engine maximum thrust  (100 kN ≤ thrust ≤ 150 kN, default: 125 kN),
+- the engine bypass ratio  (BPR)  (5 ≤ BPR ≤ 12, default: 8.5),
+- the wing area  (120 m² ≤ area ≤ 200 m², default: 160 m²),
+- the wing aspect ratio  (7 ≤ ar ≤ 12, default: 9.5).
+
+We can rewrite our objectice as $\min_{x}(\mathbb{E}(g(x)_{mtow}))$
+
+We aim to approximate the objective and constraints of the design problem with respect to the design parameters $x$.
+
+In this case, using a surrogate model is very helpfull because it helps to reduce costs and time to find the optimal state of a system.
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 20-41 -->
 
 ```{.python }
 
 from numpy import array
 import pickle
 from pathlib import Path
+import time
 
 from lh2pac.gemseo.discipline import H2TurboFan
 from lh2pac.gemseo.utils import draw_aircraft
@@ -37,38 +53,37 @@ from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
 from lh2pac.marilib.utils import unit
 
-#configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
+configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=True, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 26-28 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 42-44 -->
 
 ## Airplane initialization
 First, we instantiate the discipline:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 28-30 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 44-46 -->
 
 ```{.python }
 discipline = H2TurboFan()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 31-33 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 47-48 -->
 
-Then,
-we can have a look at its input names:
+Then, we can have a look at its input names:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 33-35 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 48-50 -->
 
 ```{.python }
 discipline.get_input_data_names()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 36-37 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 51-52 -->
 
 output names:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 37-40 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 52-55 -->
 
 ```{.python }
 output_parameters = discipline.get_output_data_names()
@@ -76,62 +91,50 @@ print(output_parameters)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 41-42 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 56-57 -->
 
 and default input values:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 42-44 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 57-59 -->
 
 ```{.python }
 discipline.default_inputs
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 45-46 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 60-61 -->
 
 and execute the discipline with these values:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 46-48 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 61-63 -->
 
 ```{.python }
 discipline.execute()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 49-50 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 64-65 -->
 
-We can print the aircraft data:
+We can print and draw the aircraft data:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 50-53 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 65-69 -->
 
 ```{.python }
 aircraft_data = get_aircraft_data(discipline)
 print(aircraft_data)
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 54-55 -->
-
-and draw the aircraft:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 55-57 -->
-
-```{.python }
 draw_aircraft(discipline, "The default A/C")
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 58-60 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 70-73 -->
 
-## Design of experiment
-we activate the logger.
+## Optimization of the raw model
+We want to otpimize the model according to its design parameters $x$.
+fisrt, we create the design space for design parameters $x$ :
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 60-74 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 73-83 -->
 
 ```{.python }
-configure_logger()
-
-# we create the design space for design parameters $x$ :
 class MyDesignSpace(DesignSpace):
     def __init__(self):
         super().__init__(name="design_parameters_space")
@@ -142,15 +145,110 @@ class MyDesignSpace(DesignSpace):
 
 design_space = MyDesignSpace()
 
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 84-87 -->
+
+Then,we create a scenario
+to minimize the maximum take-off weight `MTOW`
+under the constraints defined in the use case.
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 87-99 -->
+
+```{.python }
+scenario = create_scenario([discipline], "DisciplinaryOpt", "mtow", design_space)
+for parameter in  output_parameters[1:] :
+    scenario.add_observable(parameter)
+
+scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200)
+scenario.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137))
+scenario.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300))
+scenario.add_constraint("vz_mcr", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(0))
+scenario.add_constraint("oei_path", constraint_type="ineq", positive=True, value=0.011)
+scenario.add_constraint("ttc", constraint_type="ineq", positive=False, value=unit.s_min(25))
+scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.4)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 75-77 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 100-101 -->
 
-Thirdly,
-we create a `DOEScenario` from this discipline and this design space:
+We execute it with a gradient-free optimizer:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 77-84 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 101-105 -->
+
+```{.python }
+start_time = time.time()
+scenario.execute({"algo": "NLOPT_COBYLA", "max_iter": 1000})
+print("--- %s seconds ---" % (time.time() - start_time))
+
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 106-108 -->
+
+Lastly,
+we can visualize the optimization history:
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 108-110 -->
+
+```{.python }
+scenario.post_process("OptHistoryView", save=False, show=True)
+
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 111-112 -->
+
+We can print the optimized aircraft data:
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 112-115 -->
+
+```{.python }
+optimized_design_parameters = discipline.get_input_data()
+print(optimized_design_parameters)
+
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 116-117 -->
+
+and draw the aircraft:
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 117-119 -->
+
+```{.python }
+draw_aircraft(optimized_design_parameters, "The optimized A/C")
+
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 120-126 -->
+
+However, this approach is too expensive,
+we need to use a surrogate of the model
+to be able to find a good minimization of our objective.
+
+## Design of experiment
+We create the design space for design parameters $x$ :
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 126-137 -->
+
+```{.python }
+configure_logger()
+class MyDesignSpace(DesignSpace):
+    def __init__(self):
+        super().__init__(name="design_parameters_space")
+        self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150))
+        self.add_variable("bpr", l_b=5, u_b=12)
+        self.add_variable("area", l_b=120, u_b=200)
+        self.add_variable("aspect_ratio", l_b=7, u_b=12)
+
+design_space = MyDesignSpace()
+
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 138-140 -->
+
+Then, we create a `DOEScenario` from this
+discipline and this design space:
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 140-147 -->
 
 ```{.python }
 disciplines = [discipline]
@@ -162,26 +260,24 @@ for parameter in  output_parameters[1:] :
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 85-87 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 148-150 -->
 
-Now,
-we can sample the discipline to get 100 evaluations of the airplane parameters :
+Now, we can sample the discipline to get
+100 evaluations of the airplane parameters :
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 87-89 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 150-152 -->
 
 ```{.python }
 scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 100})
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 90-94 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 153-155 -->
 
 Lastly,
-we can export the result to an `IODataset`
-which is a subclass of `Dataset`,
-which is a subclass of `pandas.DataFrame`:
+we export the result to an `IODataset`
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 94-97 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 155-158 -->
 
 ```{.python }
 dataset = scenario.to_dataset(opt_naming=False)
@@ -189,84 +285,59 @@ dataset
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 98-100 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 159-161 -->
 
 ## Surrogate modeling
-before creating a surrogate discipline:
+We create the surrogate discipline using an RBF model
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 100-102 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 161-163 -->
 
 ```{.python }
 surrogate_discipline = create_surrogate("RBFRegressor", dataset)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 103-104 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 164-166 -->
 
-and using it for prediction:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 104-107 -->
-
-```{.python }
-surrogate_discipline.execute({"x": array([1.0])})
-surrogate_discipline.cache.last_entry
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 108-111 -->
-
-This surrogate discipline can be used in a scenario.
-The underlying regression model can also be assessed,
+We assess the regression model
 with the R2 measure for instance:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 111-115 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 166-173 -->
 
 ```{.python }
 r2 = R2Measure(surrogate_discipline.regression_model, True)
+print('R2 errors')
+print('learning measure')
 print(r2.compute_learning_measure())
+print('validation measure')
 print(r2.compute_cross_validation_measure())
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 116-117 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 174-175 -->
 
-or with the root mean squared error:
+and with the root mean squared error:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 117-121 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 175-182 -->
 
 ```{.python }
 rmse = RMSEMeasure(surrogate_discipline.regression_model, True)
+print('RMSE measure')
+print('learning measure')
 print(rmse.compute_learning_measure())
+print('validation measure')
 print(rmse.compute_cross_validation_measure())
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 122-123 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 183-187 -->
 
-Saving model and testing
+## Optimization on surrogate model
+Now, we put these elements together in a scenario
+to minimize the maximum take-off weight `MTOW`
+under the constraints definied in the use case.
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 123-130 -->
-
-```{.python }
-with Path("my_surrogate.pkl").open("wb") as f:
-    pickle.dump(surrogate_discipline, f)
-
-surrogate_discipline = import_discipline("my_surrogate.pkl")
-surrogate_discipline.execute({"x": array([1.0])})
-surrogate_discipline.get_output_data()
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 131-137 -->
-
-Thirdly,
-we put these elements together in a scenario
-to minimize the Rosenbrock function
-under the constraint that the distance
-between the design point and the solution of the unconstrained problem
-is greater or equal to 1.
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 137-149 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 187-199 -->
 
 ```{.python }
 scenario_surrogate = create_scenario([surrogate_discipline], "DisciplinaryOpt", "mtow", design_space)
@@ -283,54 +354,89 @@ scenario_surrogate.add_constraint("far", constraint_type="ineq", positive=False,
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 150-151 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 200-201 -->
 
 before executing it with a gradient-free optimizer:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 151-153 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 201-205 -->
 
 ```{.python }
+start_time = time.time()
 scenario_surrogate.execute({"algo": "NLOPT_COBYLA", "max_iter": 1000})
+print("--- %s seconds ---" % (time.time() - start_time))
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 154-156 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 206-208 -->
 
 Lastly,
 we can plot the optimization history:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 156-158 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 208-210 -->
 
 ```{.python }
 scenario_surrogate.post_process("OptHistoryView", save=False, show=True)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 159-160 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 211-212 -->
 
 We can print and save the optimized aircraft data:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 160-166 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 212-218 -->
 
 ```{.python }
-optimized_design_parameters = surrogate_discipline.get_input_data()
-print(optimized_design_parameters)
+optimized_surrogate_design_parameters = surrogate_discipline.get_input_data()
+print(optimized_surrogate_design_parameters)
 
 with Path("design_parameters.pkl").open("wb") as f:
-    pickle.dump(optimized_design_parameters, f)
+    pickle.dump(optimized_surrogate_design_parameters, f)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 167-168 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 219-220 -->
 
-and draw the aircraft:
+and draw the aircraft 
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 168-171 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 220-222 -->
 
 ```{.python }
-draw_aircraft(optimized_design_parameters, "The optimized A/C")
+draw_aircraft(optimized_surrogate_design_parameters, "The optimized A/C")
 
+```
 
+<!-- GENERATED FROM PYTHON SOURCE LINES 223-225 -->
+
+## Errors
+Finally, we verify the error of the surrogate for this optimal design $x^*_{surrogate}$
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 225-234 -->
+
+```{.python }
+output_parameters = discipline.get_output_data_names()
+
+raw_model_output = discipline.execute(optimized_surrogate_design_parameters)
+surrogate_output = surrogate_discipline.execute(optimized_surrogate_design_parameters)
+
+for param in output_parameters :
+    difference = abs(raw_model_output[param][0]-surrogate_output[param][0])
+    relative_diffrence = difference / (raw_model_output[param][0]*100)
+    print(f"parameter {param} difference of {relative_diffrence:.6f} %")
+```
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 235-236 -->
+
+and between the two optimal solutions $x^*_{raw}$ and $x^*_{surrogate}$
+
+<!-- GENERATED FROM PYTHON SOURCE LINES 236-242 -->
+
+```{.python }
+input_parameters = ['thrust', 'bpr', 'area', 'aspect_ratio']
+
+for param in input_parameters :
+    difference = abs(optimized_surrogate_design_parameters[param][0]-optimized_design_parameters[param][0])
+    relative_diffrence = difference / (optimized_design_parameters[param][0]*100)
+    print(f"parameter {param} difference of {relative_diffrence:.6f} %")
 ```
 
 

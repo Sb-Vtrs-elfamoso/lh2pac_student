@@ -1,30 +1,75 @@
 # Surrogate modeling and optimization
 
-Here, the objective was to create a surrogate model of $g:x\mapsto g(x)=f(x,u_{\mathrm{default}})$
-to approximate the objective and constraints of the design problem
-with respect to the design parameters $x$.
+Here, the objective was to find a way to minimize the maximum take-off weight `MTOW` of $g:x\mapsto g(x)=f(x,u_{\mathrm{default}})$.
 
-Then, this surrogate model is used in an optimization process
-to minimize the objective whilst ensuring the constraints
-by varying the design parameters.
+The **design parameters**  $x$ are :
+
+- the engine maximum thrust  (100 kN ≤ thrust ≤ 150 kN, default: 125 kN),
+- the engine bypass ratio  (BPR)  (5 ≤ BPR ≤ 12, default: 8.5),
+- the wing area  (120 m² ≤ area ≤ 200 m², default: 160 m²),
+- the wing aspect ratio  (7 ≤ ar ≤ 12, default: 9.5).
+
+We can rewrite our objectice as $\min_{x}(\mathbb{E}(g(x)_{mtow}))$
+
+We aim to approximate the objective and constraints of the design problem with respect to the design parameters $x$.
+
+In this case, using a surrogate model is very helpfull because it helps to reduce costs and time to find the optimal state of a system.
+
+## Optimization on raw model
+
+Firstly, we optimized the raw model to obtain the best design according to the objective (minimization of the maximum take-off weight) and the constraints.
+
+We used a gradient-free method COBYLA (Constrained Optimization BY Linear Approximations) which constructs successive linear approximations of the objective function and constraints via a simplex of $n+1$ points (in $n$ dimensions), and optimizes these approximations in a trust region at each step. [More information about the optimizer](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/#cobyla-constrained-optimization-by-linear-approximations)
+
+However, this approach costs a lot of time : the model requires extensive computations. For our computations : optimizing the raw model took around 100 s whereas the surrogate model took around 1 s. The time reduction ratio is bigger than 100 ! That is why we then focused on a surrogate model which is cheapper to compute and runs faster.
 
 ## Design of experiment
-We created an experimental design by creating a Design Space which specifies the design parameters such as `thrust`, `bypass ratio` (bpr), `area`, and `aspect ratio`, with defined lower and upper bounds.
+We created an experimental design by creating a Design Space which specifies the design parameters such as `thrust`, `bypass ratio`, `area`, and `aspect ratio`, with defined lower and upper bounds.
 
 We created a scenario using these design parameters to calculate the outputs of the original model, which is executed using a Latin Hypercube Sampling (LHS) method to gather 100 evaluations of aircraft parameters.
 
-## Surrogate model
-Then, these samples are used to approximate the relationship between input design parameters and output objectives or constraints without repeatedly executing computationally expensive models. Here, a surrogate model is created using a Radial Basis Function (RBF) regressor trained on the dataset generated from the design of experiment. 
+## Surrogate model 
+Then, these samples are used to approximate the relationship between input design parameters and output objectives or constraints without repeatedly executing computationally expensive models. Here, a surrogate model is created using a Radial Basis Function (RBF) regressor trained on the dataset generated from the design of experiment.
 
-The performance of the surrogate model is evaluated using the R2 and root mean squared error (RMSE) measures to assess both learning accuracy and cross-validation performance.
+We evaluated the performance of the surrogate model using the R2 and root mean squared error (RMSE) measures to assess both learning accuracy and cross-validation performance :
+* On the train set, we have a R2 score of $1$ and RMSE measures of less than $10^{-10}$ which shows a very high accuracy.
+* On the validation set, we have a R2 score higher than $0.99$ except for the one engine inoperative climb path variable which is of $0.85$. We can observe the same for the RMSE with a larger measure for the one engine inoperative climb path variable.
 
 These metrics help confirm the model's predictive capability and generalization across unseen data.
 
-## Otpimization on surrogate
-Finally, we optimized the surrogate model with constraints and objectives defined by the aircraft design requirements, such as takeoff field length, approach speed, and vertical climb rates.
+## Optimization on surrogate
 
-The optimization employs a gradient-free method (NLOPT COBYLA) to adjust the design parameters with the aim of minimizing the primary objective (maximum takeoff weight, MTOW) while adhering to operational constraints
+Then, we used the surrogate model in an optimization process. The optimization employs the same method (NLOPT COBYLA) we used before to adjust the design parameters with the aim of minimizing the maximum take-off weight while adhering to operational constraints.
 
-The optimization history is visualized to analyze the progression of the design parameters throughout the iterative process.
+During the optimization process, there is a balance to find between minimization of maximum take-off weight and ensure inequality constraints. Let's look the evolution of inequality constraints throughout iterations of COBYLA optimizer.
 
-This surrogate-based approach effectively reduces computational demands and expedites the design process by allowing for rapid iterations on the design parameters with a reliable estimate of objective and constraint behaviors.
+![Evolution of inequality constraints throughout iterations of COBYLA optimizer](../images/part1/evolution_ineq_constraints_surrogate_1.png)
+
+We can see on this graph that first the algorithm finds a domain where constraints are valid then it minimizes the objective until constraints aren't valid. It looks like it reiterates until it converges.
+
+Now, let's look the evolution of objective (maximum take-off weight) throughout iterations.
+
+![Evolution of objective (maximum take-off weight) throughout iterations of COBYLA optimizer](../images/part1/evolution_objective_value_surrogate.png)
+
+We can see that as mentioned before, the algorithm minimizes the objective when it finds a valid domain for the constraints.
+
+Now, we can look the evolution of the distance to optimum.
+
+![Evolution of the distance to optimum throughout iterations of COBYLA optimizer ](../images/part1/evolution_distance_optimum_surrogate.png)
+
+We can see that the optimum is obtained at iteration 80th. This is where maximum take-off weight and constraints are the most minimized. We can note that the converges point is not the optimum point.
+
+This optimal point correponds to an aircraft design with :
+- engine maximum thrust  ~ 108.52 kN
+- engine bypass ratio  (BPR)  = 12
+- wing area ~ 152.97 m²
+- wing aspect ratio ~ 11.05
+
+
+## Errors of surrogate modeling
+Finally, we visualized the errors introduced by the surrogate model and the optimization process on it.
+* The error between the surrogate and the raw model for the optimal point of the surrogate $x^*_{surrogate}$ is lower than $10^{-3}$ for each output variable compared to the raw model. This shows again that the surrogate model is accurate.
+* The error between the optimal point of the surrogate $x^*_{surrogate}$ and the optimal point of the raw model $x^*_{raw}$ is lower than $10^{-4}$ for each design parameter. This is again a marker of a good fit of the surrogate.
+
+## Conclusion
+Thanks to its accuracy and its fast computation, the surrogate model offers a good way to test different designs and modifications to have a reliable estimate  of objective and constraint behaviors.
