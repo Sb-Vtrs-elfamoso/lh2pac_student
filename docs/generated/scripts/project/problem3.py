@@ -14,11 +14,15 @@ from lh2pac.gemseo.utils import get_aircraft_data
 
 from gemseo import configure_logger
 from gemseo import configure
+from gemseo import create_surrogate
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
 from gemseo.algos.parameter_space import ParameterSpace
 from gemseo_umdo.scenarios.umdo_scenario import UMDOScenario
+from gemseo_mlearning.api import sample_discipline
+from gemseo_umdo.scenarios.udoe_scenario import UDOEScenario
+
 
 from lh2pac.marilib.utils import unit
 
@@ -74,6 +78,7 @@ class MyDesignSpace(DesignSpace):
 
 design_space = MyDesignSpace()
 
+# %%
 # we create the parameter space for technological parameters $u$      
 class MyUncertainSpace(ParameterSpace):
     def __init__(self):
@@ -86,12 +91,58 @@ class MyUncertainSpace(ParameterSpace):
         
 uncertain_space = MyUncertainSpace()
 
+# %%
+# Create the Sampling Scenario
+scenario = UDOEScenario(
+    disciplines=[discipline],
+    formulation="DisciplinaryOpt",
+    name="SamplingScenario",
+    design_space=design_space,
+    uncertain_space=uncertain_space,
+    objective_name=output_parameters[0],
+    objective_statistic_name="Mean",
+    statistic_estimation_parameters={"n_samples": 30}
+)
+# %%
+# Run the sampling scenario
+scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 50})
+
+# %%
+# Lastly,
+# we export the result to an `IODataset`
+dataset = scenario.to_dataset(opt_naming=False)
+dataset
+
+# %%
+# ## Surrogate modeling
+# We create the surrogate discipline using an RBF model
+surrogate_discipline = create_surrogate("RBFRegressor", dataset)
+
+# %%
+# We assess the regression model
+# with the R2 measure for instance:
+r2 = R2Measure(surrogate_discipline.regression_model, True)
+print('R2 errors')
+print('learning measure')
+print(r2.compute_learning_measure())
+print('validation measure')
+print(r2.compute_cross_validation_measure())
+
+# %%
+# and with the root mean squared error:
+rmse = RMSEMeasure(surrogate_discipline.regression_model, True)
+print('RMSE measure')
+print('learning measure')
+print(rmse.compute_learning_measure())
+print('validation measure')
+print(rmse.compute_cross_validation_measure())
+
 
 # %%
 # ## Robust Optimization
-# we create a `DOEScenario` from this
-# discipline and this design space and parameter space:
-disciplines = [discipline]
+# we create a `DOEScenario` from the surrogate, the
+# discipline and the design space and parameter space:
+disciplines = [surrogate_discipline]
 scenario = UMDOScenario(
     disciplines, "DisciplinaryOpt", output_parameters[0], design_space, uncertain_space,
     objective_statistic_name="Mean", statistic_estimation="Sampling", statistic_estimation_parameters={"n_samples": 50},

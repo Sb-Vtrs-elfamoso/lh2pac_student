@@ -14,11 +14,15 @@ from lh2pac.gemseo.utils import get_aircraft_data
 
 from gemseo import configure_logger
 from gemseo import configure
+from gemseo import create_surrogate
+from gemseo import create_scenario
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
 from gemseo.mlearning.quality_measures.rmse_measure import RMSEMeasure
 from gemseo.algos.parameter_space import ParameterSpace
 from gemseo_umdo.scenarios.umdo_scenario import UMDOScenario
+from gemseo_umdo.scenarios.udoe_scenario import UDOEScenario
+
 
 from lh2pac.marilib.utils import unit
 
@@ -71,9 +75,71 @@ class MyDesignSpace(DesignSpace):
         self.add_variable("bpr", l_b=5, u_b=12, value=optimized_design_parameters['bpr'])
         self.add_variable("area", l_b=120, u_b=200, value=optimized_design_parameters['area'])
         self.add_variable("aspect_ratio", l_b=7, u_b=12, value=optimized_design_parameters['aspect_ratio'])
+        self.add_variable("tgi", l_b=0.25, u_b=0.305, value=0.3)
+        self.add_variable("tvi", l_b=0.8, u_b=0.85, value=0.845)
+        self.add_variable("sfc", l_b=0.99, u_b=1.03, value=1.0)
+        self.add_variable("mass", l_b=0.99, u_b=1.03, value=1.0)
+        self.add_variable("drag", l_b=0.99, u_b=1.03, value=1.0)
 
 design_space = MyDesignSpace()
 
+# %%
+# Then, we create a `DOEScenario` from this
+# discipline and this design space:
+disciplines = [discipline]
+scenario = create_scenario(
+    disciplines, "DisciplinaryOpt", output_parameters[0], design_space, scenario_type="DOE"
+)
+for parameter in  output_parameters[1:] :
+    scenario.add_observable(parameter)
+# %%
+# Run the sampling scenario
+scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 100})
+
+# %%
+# Lastly,
+# we export the result to an `IODataset`
+dataset = scenario.to_dataset(opt_naming=False)
+dataset
+
+# %%
+# ## Surrogate modeling
+# We create the surrogate discipline using an RBF model
+surrogate_discipline = create_surrogate("RBFRegressor", dataset)
+
+# %%
+# We assess the regression model
+# with the R2 measure for instance:
+r2 = R2Measure(surrogate_discipline.regression_model, True)
+print('R2 errors')
+print('learning measure')
+print(r2.compute_learning_measure())
+print('validation measure')
+print(r2.compute_cross_validation_measure())
+
+# %%
+# and with the root mean squared error:
+rmse = RMSEMeasure(surrogate_discipline.regression_model, True)
+print('RMSE measure')
+print('learning measure')
+print(rmse.compute_learning_measure())
+print('validation measure')
+print(rmse.compute_cross_validation_measure())
+
+
+# %%
+# ## Robust Optimization
+# we create the design space
+class MyDesignSpace(DesignSpace):
+    def __init__(self):
+        super().__init__(name="design_parameters_space")
+        self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150), value=optimized_design_parameters['thrust'])
+        self.add_variable("bpr", l_b=5, u_b=12, value=optimized_design_parameters['bpr'])
+        self.add_variable("area", l_b=120, u_b=200, value=optimized_design_parameters['area'])
+        self.add_variable("aspect_ratio", l_b=7, u_b=12, value=optimized_design_parameters['aspect_ratio'])
+design_space = MyDesignSpace()
+
+# %%
 # we create the parameter space for technological parameters $u$      
 class MyUncertainSpace(ParameterSpace):
     def __init__(self):
@@ -86,15 +152,13 @@ class MyUncertainSpace(ParameterSpace):
         
 uncertain_space = MyUncertainSpace()
 
-
 # %%
-# ## Robust Optimization
-# we create a `DOEScenario` from this
-# discipline and this design space and parameter space:
-disciplines = [discipline]
+# we create a `DOEScenario` from the surrogate, the
+# discipline and the design space and parameter space:
+disciplines = [surrogate_discipline]
 scenario = UMDOScenario(
     disciplines, "DisciplinaryOpt", output_parameters[0], design_space, uncertain_space,
-    objective_statistic_name="Mean", statistic_estimation="Sampling", statistic_estimation_parameters={"n_samples": 50},
+    objective_statistic_name="Mean", statistic_estimation="Sampling", statistic_estimation_parameters={"n_samples": 30},
 )
 
 for parameter in  output_parameters[1:] :
@@ -113,7 +177,7 @@ scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.
 # %%
 # Now,
 # we execute the discipline with a gradient-free optimizer
-scenario.execute({"algo": "NLOPT_COBYLA", "max_iter": 30})
+scenario.execute({"algo": "NLOPT_COBYLA", "max_iter": 100})
 
 # %%
 # ## Visualization

@@ -91,6 +91,8 @@ Since we found an optimum minimizing the maximum take-off weight whilst ensuring
 * time to climb to cruise altitude which means that hydrogen aircraft gets faster to its cruising speed and altitude which means that it travels faster than A320 aircrafts.
 * fuselage aspect ratio which means that the aircraft has a more compact design ensuring more simple storage of hydrogen airplanes.
 
-However, our approach is based on default values of technological parameters which is not realistic. To take account of this uncertainty, we will perform a sensivity analysis in the next problem.
+However, the maximum take-off weight is more than 3% larger than the A320 which is pretty bad. This means that even if operational constraints are achieved, the hydrogen plane cannot achieve A320 performances with the technological parameters we used.
+
+Furthermore, our approach is based on default values of technological parameters which is not realistic. To take account of this uncertainty, we will perform a sensivity analysis in the next problem.
 
 [Next : Problem 2, Surrogate modeling and Sensivity analysis](../report/part2.md)

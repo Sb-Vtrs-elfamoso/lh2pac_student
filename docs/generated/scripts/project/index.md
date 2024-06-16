@@ -4,20 +4,6 @@
 
 
 
-<div class="mkd-glr-thumbcontainer" tooltip="Problem 3 : Robust optimization">
-    <!--div class="figure align-default" id="id1"-->
-        <img alt="Problem 3 : Robust optimization" src="images/thumb/mkd_glr_problem3_thumb.png" />
-        <p class="caption">
-            <span class="caption-text">
-                <a class="reference internal" href="problem3">
-                    <span class="std std-ref">Problem 3 : Robust optimization</span>
-                </a>
-            </span>
-            <!--a class="headerlink" href="#id1" title="Permalink to this image"></a-->
-        </p>
-    <!--/div-->
-</div>
-
 <div class="mkd-glr-thumbcontainer" tooltip="Problem 2 : Uncertainty quantification">
     <!--div class="figure align-default" id="id1"-->
         <img alt="Problem 2 : Uncertainty quantification" src="images/thumb/mkd_glr_problem2_thumb.png" />
@@ -25,6 +11,20 @@
             <span class="caption-text">
                 <a class="reference internal" href="problem2">
                     <span class="std std-ref">Problem 2 : Uncertainty quantification</span>
+                </a>
+            </span>
+            <!--a class="headerlink" href="#id1" title="Permalink to this image"></a-->
+        </p>
+    <!--/div-->
+</div>
+
+<div class="mkd-glr-thumbcontainer" tooltip="Problem 3 : Robust optimization">
+    <!--div class="figure align-default" id="id1"-->
+        <img alt="Problem 3 : Robust optimization" src="images/thumb/mkd_glr_problem3_thumb.png" />
+        <p class="caption">
+            <span class="caption-text">
+                <a class="reference internal" href="problem3">
+                    <span class="std std-ref">Problem 3 : Robust optimization</span>
                 </a>
             </span>
             <!--a class="headerlink" href="#id1" title="Permalink to this image"></a-->
