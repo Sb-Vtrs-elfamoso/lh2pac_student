@@ -1,6 +1,15 @@
-# Surrogate modeling and optimization
+[Previous : Introduction](../report/introduction.md)
 
-Here, the objective was to find a way to minimize the maximum take-off weight `MTOW` of $g:x\mapsto g(x)=f(x,u_{\mathrm{default}})$.
+# Surrogate modeling and Optimization
+
+Here, the objective was to find a way to minimize the maximum take-off weight `MTOW` of $g:x\mapsto g(x)=f(x,u_{\mathrm{default}})$. with $x$ the deign parameters, $u$ the technological parameters and $f$ the airplane model.
+
+In this case, **technological parameters** are set by default to : 
+1. tank gravimetric index = 0.3,
+2. tank volumetric index = 0.845
+3. aerodynamic efficiency factor = 1.
+4. propulsion efficiency factor = 1.
+5. structure efficiency factor = 1.
 
 The **design parameters**  $x$ are :
 
@@ -9,7 +18,7 @@ The **design parameters**  $x$ are :
 - the wing area  (120 m² ≤ area ≤ 200 m², default: 160 m²),
 - the wing aspect ratio  (7 ≤ ar ≤ 12, default: 9.5).
 
-We can rewrite our objectice as $\min_{x}(\mathbb{E}(g(x)_{mtow}))$
+We can rewrite our objective as $\min_{x}(\mathbb{E}(g(x)_{mtow}))$
 
 We aim to approximate the objective and constraints of the design problem with respect to the design parameters $x$.
 
@@ -45,7 +54,7 @@ During the optimization process, there is a balance to find between minimization
 
 ![Evolution of inequality constraints throughout iterations of COBYLA optimizer](../images/part1/evolution_ineq_constraints_surrogate_1.png)
 
-We can see on this graph that first the algorithm finds a domain where constraints are valid then it minimizes the objective until constraints aren't valid. It looks like it reiterates until it converges.
+We can see on this graph that first the algorithm finds a domain where constraints are valid then it minimizes the objective until constraints aren't valid. It looks like it reiterates until it converges. At the end we can see that for the green tiles, the hydrogen aircraft outperforms constraints. This means that hydrogen aircraft outperforms A320 performances.
 
 Now, let's look the evolution of objective (maximum take-off weight) throughout iterations.
 
@@ -68,8 +77,20 @@ This optimal point correponds to an aircraft design with :
 
 ## Errors of surrogate modeling
 Finally, we visualized the errors introduced by the surrogate model and the optimization process on it.
+
 * The error between the surrogate and the raw model for the optimal point of the surrogate $x^*_{surrogate}$ is lower than $10^{-3}$ for each output variable compared to the raw model. This shows again that the surrogate model is accurate.
 * The error between the optimal point of the surrogate $x^*_{surrogate}$ and the optimal point of the raw model $x^*_{raw}$ is lower than $10^{-4}$ for each design parameter. This is again a marker of a good fit of the surrogate.
 
 ## Conclusion
 Thanks to its accuracy and its fast computation, the surrogate model offers a good way to test different designs and modifications to have a reliable estimate  of objective and constraint behaviors.
+
+Since we found an optimum minimizing the maximum take-off weight whilst ensuring operational constraints, we can see that with default values of technological parameters we can find an aircraft design for which the hydrogen aircraft outperforms A320 aircraft performances in terms of :
+
+* take off field length which means that runways could be shorter and more airports could host hydrogen aircraft than A320
+* vertical speed MCL rating which means better handling for emergency situations like anti-collisions cases
+* time to climb to cruise altitude which means that hydrogen aircraft gets faster to its cruising speed and altitude which means that it travels faster than A320 aircrafts.
+* fuselage aspect ratio which means that the aircraft has a more compact design ensuring more simple storage of hydrogen airplanes.
+
+However, our approach is based on default values of technological parameters which is not realistic. To take account of this uncertainty, we will perform a sensivity analysis in the next problem.
+
+[Next : Problem 2, Surrogate modeling and Sensivity analysis](../report/part2.md)

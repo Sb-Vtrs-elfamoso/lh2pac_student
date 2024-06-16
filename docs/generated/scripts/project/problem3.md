@@ -15,7 +15,7 @@
 
 Problem 3 : Robust optimization
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 6-28 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 6-26 -->
 
 ```{.python }
 
@@ -28,8 +28,6 @@ from lh2pac.gemseo.utils import draw_aircraft
 from lh2pac.gemseo.utils import get_aircraft_data
 
 from gemseo import configure_logger
-from gemseo import create_surrogate
-from gemseo import import_discipline
 from gemseo import configure
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
@@ -42,35 +40,35 @@ from lh2pac.marilib.utils import unit
 configure(activate_discipline_counters=False, activate_function_counters=False, activate_progress_bar=True, activate_discipline_cache=False, check_input_data=False, check_output_data=False, check_desvars_bounds=False)
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 29-31 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 27-29 -->
 
 ## Airplane initialization
 First, we instantiate the discipline:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 31-33 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 29-31 -->
 
 ```{.python }
 discipline = H2TurboFan()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 34-36 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 32-34 -->
 
 Then,
 we can have a look at its input names:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 36-38 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 34-36 -->
 
 ```{.python }
 discipline.get_input_data_names()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 39-40 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 37-38 -->
 
 output names:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 40-43 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 38-41 -->
 
 ```{.python }
 output_parameters = discipline.get_output_data_names()
@@ -78,33 +76,33 @@ print(output_parameters)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 44-45 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 42-43 -->
 
 and default input values:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 45-47 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 43-45 -->
 
 ```{.python }
 discipline.default_inputs
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 48-49 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 46-47 -->
 
 and execute the discipline with these values:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 49-51 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 47-49 -->
 
 ```{.python }
 discipline.execute()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 52-53 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 50-51 -->
 
 We can print the aircraft data:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 53-56 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 51-54 -->
 
 ```{.python }
 aircraft_data = get_aircraft_data(discipline)
@@ -112,27 +110,26 @@ print(aircraft_data)
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 57-58 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 55-56 -->
 
 and draw the aircraft:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 58-60 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 56-58 -->
 
 ```{.python }
 draw_aircraft(discipline, "The default A/C")
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 61-63 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 59-61 -->
 
 ## Design of experiment
-we activate the logger.
+we create the design space for design parameters $x$
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 63-93 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 61-90 -->
 
 ```{.python }
 configure_logger()
-# we create the design space for design parameters $x$
 with Path("design_parameters.pkl").open("rb") as f:
     optimized_design_parameters = pickle.load(f)
 
@@ -163,12 +160,13 @@ uncertain_space = MyUncertainSpace()
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 94-96 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 91-94 -->
 
-Thirdly,
-we create a `DOEScenario` from this discipline and this design space:
+## Robust Optimization
+we create a `DOEScenario` from this
+discipline and this design space and parameter space:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 96-105 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 94-103 -->
 
 ```{.python }
 disciplines = [discipline]
@@ -182,11 +180,11 @@ for parameter in  output_parameters[1:] :
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 106-107 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 104-105 -->
 
-adding constraints
+we then add constraints
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 107-115 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 105-113 -->
 
 ```{.python }
 scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200, statistic_name="Mean")
@@ -199,46 +197,38 @@ scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 116-118 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 114-116 -->
 
 Now,
 we execute the discipline with a gradient-free optimizer
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 118-120 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 116-118 -->
 
 ```{.python }
 scenario.execute({"algo": "NLOPT_COBYLA", "max_iter": 30})
 
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 121-122 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 119-121 -->
 
-plot the history:
+## Visualization
+and plot the history:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 122-123 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 121-123 -->
 
 ```{.python }
 scenario.post_process("OptHistoryView", save=True, show=True)
+
 ```
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 126-127 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 124-125 -->
 
-We can print the aircraft data:
+We can print and draw the optimized aircraft design:
 
-<!-- GENERATED FROM PYTHON SOURCE LINES 127-129 -->
+<!-- GENERATED FROM PYTHON SOURCE LINES 125-128 -->
 
 ```{.python }
 print(discipline.get_input_data())
-
-```
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 130-131 -->
-
-and draw the aircraft:
-
-<!-- GENERATED FROM PYTHON SOURCE LINES 131-133 -->
-
-```{.python }
 draw_aircraft(discipline.get_input_data(), "The optimized A/C")
 
 ```

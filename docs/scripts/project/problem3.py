@@ -13,8 +13,6 @@ from lh2pac.gemseo.utils import draw_aircraft
 from lh2pac.gemseo.utils import get_aircraft_data
 
 from gemseo import configure_logger
-from gemseo import create_surrogate
-from gemseo import import_discipline
 from gemseo import configure
 from gemseo.algos.design_space import DesignSpace
 from gemseo.mlearning.quality_measures.r2_measure import R2Measure
@@ -59,9 +57,8 @@ draw_aircraft(discipline, "The default A/C")
 
 # %%
 # ## Design of experiment
-# we activate the logger.
-configure_logger()
 # we create the design space for design parameters $x$
+configure_logger()
 with Path("design_parameters.pkl").open("rb") as f:
     optimized_design_parameters = pickle.load(f)
 
@@ -91,8 +88,9 @@ uncertain_space = MyUncertainSpace()
 
 
 # %%
-# Thirdly,
-# we create a `DOEScenario` from this discipline and this design space:
+# ## Robust Optimization
+# we create a `DOEScenario` from this
+# discipline and this design space and parameter space:
 disciplines = [discipline]
 scenario = UMDOScenario(
     disciplines, "DisciplinaryOpt", output_parameters[0], design_space, uncertain_space,
@@ -103,7 +101,7 @@ for parameter in  output_parameters[1:] :
     scenario.add_observable(parameter, statistic_name="Mean")
 
 # %%
-# adding constraints
+# we then add constraints
 scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200, statistic_name="Mean")
 scenario.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137), statistic_name="Mean")
 scenario.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300), statistic_name="Mean")
@@ -118,16 +116,13 @@ scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.
 scenario.execute({"algo": "NLOPT_COBYLA", "max_iter": 30})
 
 # %%
-# plot the history:
+# ## Visualization
+# and plot the history:
 scenario.post_process("OptHistoryView", save=True, show=True)
-# %%
 
 # %%
-# We can print the aircraft data:
+# We can print and draw the optimized aircraft design:
 print(discipline.get_input_data())
-
-# %%
-# and draw the aircraft:
 draw_aircraft(discipline.get_input_data(), "The optimized A/C")
 
 # %%
