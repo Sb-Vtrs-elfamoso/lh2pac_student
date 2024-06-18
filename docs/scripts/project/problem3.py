@@ -189,9 +189,8 @@ scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.
 # we execute the discipline with a nonlinearly constrained gradient-based optimizer
 scenario.set_differentiation_method("finite_differences")
 scenario.execute({"algo": "NLOPT_SLSQP", 
-                  "max_iter": 50, 
-                  "ineq_tolerance": 1e-3,
-                  "ctol_abs": 1e-2})
+                  "max_iter": 50
+                  })
 
 # %%
 # ## Visualization
