@@ -3,3 +3,5 @@
 /.venv
 /src/lh2pac.egg-info
 /src/lh2pac.egg-info
+docs/scripts/project/aircraft_output_data.json
+docs/scripts/project/aircraft_binary_object.pkl
