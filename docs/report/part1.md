@@ -60,7 +60,7 @@ These metrics help confirm the model's predictive capability and generalization 
 
 Then, we used the surrogate model in an optimization process. The optimization employs the same method (NLOPT COBYLA) we used before to adjust the design parameters with the aim of minimizing the maximum take-off weight while adhering to operational constraints.
 
-During the optimization process, there is a balance to find between minimization of maximum take-off weight and ensure inequality constraints. Let's look the evolution of inequality constraints throughout iterations of COBYLA optimizer.
+During the optimization process, there is a balance find between minimization of maximum take-off weight and ensure inequality constraints. Let's look the evolution of inequality constraints throughout iterations of COBYLA optimizer.
 
 ![Evolution of inequality constraints throughout iterations of COBYLA optimizer](../images/part1/evolution_ineq_constraints_surrogate_1.png)
 

@@ -140,7 +140,7 @@ with Path("design_parameters.pkl").open("rb") as f:
 
 print(optimized_design_parameters)
 
-class MyDesignSpace(DesignSpace):
+class SurroDesignSpace(DesignSpace):
     def __init__(self):
         super().__init__(name="design_parameters_space")
         self.add_variable("thrust", l_b=unit.N_kN(100), u_b=unit.N_kN(150), value=optimized_design_parameters['thrust'])
@@ -153,7 +153,7 @@ class MyDesignSpace(DesignSpace):
         self.add_variable("mass", l_b=0.99, u_b=1.03, value=1.0)
         self.add_variable("drag", l_b=0.99, u_b=1.03, value=1.0)
 
-design_space = MyDesignSpace()
+surro_design_space = SurroDesignSpace()
 
 ```
 
@@ -167,7 +167,7 @@ discipline and this design space:
 ```{.python }
 disciplines = [discipline]
 scenario = create_scenario(
-    disciplines, "DisciplinaryOpt", output_parameters[0], design_space, scenario_type="DOE"
+    disciplines, "DisciplinaryOpt", output_parameters[0], surro_design_space, scenario_type="DOE"
 )
 for parameter in  output_parameters[1:] :
     scenario.add_observable(parameter)

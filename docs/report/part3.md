@@ -10,7 +10,7 @@ We used the same design parameters and operational constraints as in [Problem 1]
 
 ## Optimization on raw model
 
-Our first approach was to optimize the raw model to obtain the best design according to the objective (minimization of the maximum take-off weight) and the constraints. We used the SLSQP (Sequential Least-Squares Quadratic Programming : it is nonlinearly constrained gradient-based) optimizer with 50 iterations. Those computations took more than 3 hours with the raw model. With a surrogate, this optimization process takes around 30 minutes, that is why we only deal with surrogate model in this report.
+Our first approach was to optimize the raw model to obtain the best design according to the objective (minimization of the maximum take-off weight) and the constraints. We used the SLSQP (Sequential Least-Squares Quadratic Programming : it is nonlinearly constrained gradient-based) optimizer with 50 iterations. Those computations took more than 5 hours with the raw model. With a surrogate, this optimization process takes around 45 minutes, that is why we only deal with surrogate model in this report.
 
 ## Surrogate model
 ### Sampling
@@ -50,7 +50,7 @@ Now, we can look the evolution of the distance to optimum.
 We can see that the optimum is obtained at iteration 94th. This is where maximum take-off weight and constraints are the most minimized. We can note that the converges point is not the optimum point.
 
 ## Conclusion
-We can see that at 95% confidence degree we cannot find design parameters that ensure that hydrogen aircraft achieves A320 performances. That means that working on technological parameters is important because for a considerable part
+We can see that at 95% confidence degree we cannot find design parameters that ensure that hydrogen aircraft achieves A320 performances. That means that working on technological parameters is important because not all values of technological parameters lead to a performant hydrogen aircraft.
 
 
 

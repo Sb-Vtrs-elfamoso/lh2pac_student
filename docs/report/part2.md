@@ -18,7 +18,7 @@ The primary goal of UQ is to:
 
 First, we instantiated the H2TurboFan model and examined the input data names and output parameters of the discipline. The default input values were used to execute the discipline, and the aircraft data was printed and visualized. This step ensures we understand the baseline performance and characteristics of the aircraft model.
 
-![The default aircraft design](../images/part 2/output.png)
+![The default aircraft design](../images/part2/output.png)
 
 ### Defining Uncertain Parameters
 
@@ -118,7 +118,7 @@ Here are the results of the statistical analysis:
   
   The mean drag efficiency is slightly above the mode value of 1.0, reflecting a small deviation in aerodynamic efficiency, with a low variance indicating a minor spread around the mean.
 
-![Parameters histograms](../images/part 2/output2.png)
+![Parameters histograms](../images/part2/output2.png)
 
 These results illustrate the impact of technological parameter uncertainties on the aircraft's performance, particularly on the MTOW. The low variance values for the parameters suggest that the uncertainties do not significantly affect the overall distribution, ensuring reliable predictions of aircraft performance.
 
@@ -128,7 +128,7 @@ These results illustrate the impact of technological parameter uncertainties on 
 #### Model analysis using Sobol method
 Using the Sobol method, we conducted a sensitivity analysis to assess the influence of uncertain parameters on the Maximum Take-Off Weight (MTOW). The results, presented in a plot with box plots for each parameter, highlight both first-order and total-order Sobol indices.
 
-![Sobol indices](../images/part 2/output3.png)
+![Sobol indices](../images/part2/output3.png)
 
 The plot reveals the following insights based on the Sobol indices means:
 
@@ -165,7 +165,7 @@ These findings provide a clear ranking of parameter importance for optimizing MT
 
 In this section, we extended our analysis using a surrogate model and performed a Sobol index analysis to evaluate the influence of uncertain parameters on MTOW. The updated box plot presents the following insights alongside the previous findings:
 
-![Sobol indices](../images/part 2/output4.png)
+![Sobol indices](../images/part2/output4.png)
 
 **Tank Gravimetric Index (tgi):**
 
@@ -192,7 +192,7 @@ These findings from the surrogate model provide insights into the robustness of 
 
 In this section, we employed the Morris method to analyze the sensitivity of uncertain parameters on MTOW, comparing results between the original model and the surrogate model.
 
-![Sobol indices](../images/part 2/output5.png)
+![Sobol indices](../images/part2/output5.png)
 
 ##### Original Model Analysis
 
