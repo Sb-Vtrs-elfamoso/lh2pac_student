@@ -35,7 +35,7 @@ During the optimization process, there is a balance to find between minimization
 
 ![Evolution of inequality constraints throughout iterations of SLSQP optimizer](../images/part3/evolution_ineq_constraints_surrogate.png)
 
-We can see on this graph that first the algorithm does not find a domain where the empirical means of constraints are valid accros the uncertain parameters distribution.
+We can see on this graph that first the algorithm does not find a domain where the confidence interval of constraints is valid  at 0.95 confidence degree accross the uncertain parameters distribution. 
 
 Now, let's look the evolution of objective (maximum take-off weight) throughout iterations.
 
@@ -57,6 +57,7 @@ This optimal point correponds to an aircraft design with :
 
 
 ## Conclusion
+We can see that at 95% confidence degree we cannot find design parameters that ensure that hydrogen aircraft achieves A320 performances. That means that working on technological parameters is important because for a considerable part
 
 
 

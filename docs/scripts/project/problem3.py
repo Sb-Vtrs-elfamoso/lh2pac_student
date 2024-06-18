@@ -95,7 +95,7 @@ for parameter in  output_parameters[1:] :
     scenario.add_observable(parameter)
 # %%
 # We run the sampling scenario
-scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 100})
+scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 30})
 dataset = scenario.to_dataset(opt_naming=False)
 dataset
 
@@ -143,11 +143,11 @@ design_space = MyDesignSpace()
 class MyUncertainSpace(ParameterSpace):
     def __init__(self):
         super().__init__()
-        self.add_random_variable("tgi", "SPTriangularDistribution", minimum=0.25,mode=0.3, maximum=0.305)
-        self.add_random_variable("tvi", "SPTriangularDistribution", minimum=0.8,mode=0.845, maximum=0.85)
-        self.add_random_variable("sfc", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
-        self.add_random_variable("mass", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
-        self.add_random_variable("drag", "SPTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
+        self.add_random_variable("tgi", "OTTriangularDistribution", minimum=0.25,mode=0.3, maximum=0.305)
+        self.add_random_variable("tvi", "OTTriangularDistribution", minimum=0.8,mode=0.845, maximum=0.85)
+        self.add_random_variable("sfc", "OTTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
+        self.add_random_variable("mass", "OTTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
+        self.add_random_variable("drag", "OTTriangularDistribution", minimum=0.99,mode=1.0, maximum=1.03)
         
 uncertain_space = MyUncertainSpace()
 
@@ -167,7 +167,7 @@ scenario = UMDOScenario(disciplines, "DisciplinaryOpt", "mtow", design_space, un
                         objective_statistic_name="Mean", statistic_estimation="Sampling",
                         statistic_estimation_parameters={
                             "algo": "OT_MONTE_CARLO",
-                            "n_samples": 500,
+                            "n_samples": 30,
                             "seed": 22
                         }) 
 
@@ -176,13 +176,13 @@ for parameter in  output_parameters[1:] :
 
 # %%
 # we then add constraints
-scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200, statistic_name="Margin", factor=2)
-scenario.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137), statistic_name="Margin", factor=2)
-scenario.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300), statistic_name="Margin", factor=2)
-scenario.add_constraint("vz_mcr", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(0), statistic_name="Margin", factor=2)
-scenario.add_constraint("oei_path", constraint_type="ineq", positive=True, value=0.011, statistic_name="Margin", factor=2)
-scenario.add_constraint("ttc", constraint_type="ineq", positive=False, value=unit.s_min(25), statistic_name="Margin", factor=2)
-scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.4, statistic_name="Margin", factor=2)
+scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200, statistic_name="Margin", factor=0.6)
+scenario.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137), statistic_name="Margin", factor=0.6)
+scenario.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300), statistic_name="Margin", factor=0.6)
+scenario.add_constraint("vz_mcr", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(0), statistic_name="Margin", factor=0.6)
+scenario.add_constraint("oei_path", constraint_type="ineq", positive=True, value=0.011, statistic_name="Margin", factor=0.6)
+scenario.add_constraint("ttc", constraint_type="ineq", positive=False, value=unit.s_min(25), statistic_name="Margin", factor=0.6)
+scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.4, statistic_name="Margin", factor=0.6)
 
 # %%
 # Now,
