@@ -18,20 +18,6 @@
     <!--/div-->
 </div>
 
-<div class="mkd-glr-thumbcontainer" tooltip="Problem 3 : Robust optimization">
-    <!--div class="figure align-default" id="id1"-->
-        <img alt="Problem 3 : Robust optimization" src="images/thumb/mkd_glr_problem3_thumb.png" />
-        <p class="caption">
-            <span class="caption-text">
-                <a class="reference internal" href="problem3">
-                    <span class="std std-ref">Problem 3 : Robust optimization</span>
-                </a>
-            </span>
-            <!--a class="headerlink" href="#id1" title="Permalink to this image"></a-->
-        </p>
-    <!--/div-->
-</div>
-
 <div class="mkd-glr-thumbcontainer" tooltip="Here, the objective was to find a way to minimize the maximum take-off weight MTOW of $g:x\maps...">
     <!--div class="figure align-default" id="id1"-->
         <img alt="Problem 1 : Optimization" src="images/thumb/mkd_glr_problem1_thumb.png" />
@@ -39,6 +25,20 @@
             <span class="caption-text">
                 <a class="reference internal" href="problem1">
                     <span class="std std-ref">Problem 1 : Optimization</span>
+                </a>
+            </span>
+            <!--a class="headerlink" href="#id1" title="Permalink to this image"></a-->
+        </p>
+    <!--/div-->
+</div>
+
+<div class="mkd-glr-thumbcontainer" tooltip="Problem 3 : Robust optimization">
+    <!--div class="figure align-default" id="id1"-->
+        <img alt="Problem 3 : Robust optimization" src="images/thumb/mkd_glr_problem3_thumb.png" />
+        <p class="caption">
+            <span class="caption-text">
+                <a class="reference internal" href="problem3">
+                    <span class="std std-ref">Problem 3 : Robust optimization</span>
                 </a>
             </span>
             <!--a class="headerlink" href="#id1" title="Permalink to this image"></a-->
