@@ -35,28 +35,22 @@ During the optimization process, there is a balance to find between minimization
 
 ![Evolution of inequality constraints throughout iterations of SLSQP optimizer](../images/part3/evolution_ineq_constraints_surrogate.png)
 
-We can see on this graph that first the algorithm does not find a domain where the empirical means of constraints are valid accros the uncertain parameters distribution.
+We can see on this graph that first the algorithm does not find a domain where the confidence interval of constraints is valid  at 0.95 confidence degree accross the uncertain parameters distribution. 
 
 Now, let's look the evolution of objective (maximum take-off weight) throughout iterations.
 
 ![Evolution of objective (maximum take-off weight) throughout iterations of SLSQP optimizer](../images/part3/evolution_objective_value_surrogate.png)
 
-We can see that as mentioned before, the algorithm minimizes the objective when it finds a valid domain for the constraints.
+We can see that maximum take off weight is now minimized under 77000 kg.
 
 Now, we can look the evolution of the distance to optimum.
 
 ![Evolution of the distance to optimum throughout iterations of SLSQP optimizer ](../images/part3/evolution_distance_optimum_surrogate.png)
 
-We can see that the optimum is obtained at iteration 80th. This is where maximum take-off weight and constraints are the most minimized. We can note that the converges point is not the optimum point.
-
-This optimal point correponds to an aircraft design with :
-- engine maximum thrust  ~ 108.52 kN
-- engine bypass ratio  (BPR)  = 12
-- wing area ~ 152.97 m²
-- wing aspect ratio ~ 11.05
-
+We can see that the optimum is obtained at iteration 94th. This is where maximum take-off weight and constraints are the most minimized. We can note that the converges point is not the optimum point.
 
 ## Conclusion
+We can see that at 95% confidence degree we cannot find design parameters that ensure that hydrogen aircraft achieves A320 performances. That means that working on technological parameters is important because for a considerable part
 
 
 
