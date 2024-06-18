@@ -1,6 +1,6 @@
 # Introduction
 ## Context
-During ModIA formation, Meta-modelization course aims to teach students about surrogate models usages and challenges. Thus, this project supervized by [Matthias De Lozzo](matthias.delozzo@irt-saintexupery.com) deals with models and surrogate models of hygrogen powered turbofan airplanes. In fact, hydrogen is a candidate to replace kerosene for future airplanes because it does not emit carbon dioxide when burning,
+During ModIA formation, Meta-modelization course aims to teach students about surrogate models usages and challenges. Thus, this project supervized by [Matthias De Lozzo](mailto:matthias.delozzo@irt-saintexupery.com) deals with models and surrogate models of hygrogen powered turbofan airplanes. In fact, hydrogen is a candidate to replace kerosene for future airplanes because it does not emit carbon dioxide when burning,
 as described in the  [The Airbus' ZEROe project](https://www.airbus.com/en/innovation/low-carbon-aviation/hydrogen/zeroe).
 
 The objective of this study is to evaluate the impact of the use of liquid hydrogen in place of kerosene on the design and performances of a turbofan airplane.
