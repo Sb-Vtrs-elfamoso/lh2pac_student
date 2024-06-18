@@ -2,7 +2,7 @@
 
 # Surrogate modeling and Optimization
 
-Here, the objective was to find a way to minimize the maximum take-off weight `MTOW` of $g:x\mapsto g(x)=f(x,u_{\mathrm{default}})$. with $x$ the deign parameters, $u$ the technological parameters and $f$ the airplane model.
+Here, the objective was to find a way to minimize the maximum take-off weight `MTOW` of $f_u:x\mapsto f_u(x)=f(x,u_{\mathrm{default}})$. with $x$ the deign parameters, $u$ the technological parameters and $f$ the airplane model.
 
 In this case, **technological parameters** are set by default to : 
 1. tank gravimetric index = 0.3,
@@ -18,7 +18,7 @@ The **design parameters**  $x$ are :
 - the wing area  (120 m² ≤ area ≤ 200 m², default: 160 m²),
 - the wing aspect ratio  (7 ≤ ar ≤ 12, default: 9.5).
 
-We can rewrite our objective as $\min_{x}(\mathbb{E}(g(x)_{mtow}))$
+We can rewrite our objective as $\min_{x}(\mathbb{E}(f_u(x)_{mtow}))$ under constraints $g(x,u) \leq 0$
 
 We aim to approximate the objective and constraints of the design problem with respect to the design parameters $x$.
 
@@ -27,6 +27,16 @@ In this case, using a surrogate model is very helpfull because it helps to reduc
 ## Optimization on raw model
 
 Firstly, we optimized the raw model to obtain the best design according to the objective (minimization of the maximum take-off weight) and the constraints.
+
+The **operational constraints** are :
+
+- the take off field length (TOFL ≤ 2200 m),
+- the approach speed (VAPP ≤ 137 kt),
+- the vertical speed MCL rating  (300 ft/min ≤ VZ_MCL),
+- the vertical MCR rating  (0 ft/min ≤ VZ_MCR),
+- the one engine inoperative climb path  (1.1% ≤ OEI_PATH),
+- the time To climb to cruise altitude  (TTC ≤ 25 min),
+- the fuselage aspect Ratio  (FAR ≤ 13.4).
 
 We used a gradient-free method COBYLA (Constrained Optimization BY Linear Approximations) which constructs successive linear approximations of the objective function and constraints via a simplex of $n+1$ points (in $n$ dimensions), and optimizes these approximations in a trust region at each step. [More information about the optimizer](https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/#cobyla-constrained-optimization-by-linear-approximations)
 

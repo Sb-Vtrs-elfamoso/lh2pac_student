@@ -61,7 +61,8 @@ draw_aircraft(discipline, "The default A/C")
 
 # %%
 # ## Design of experiment
-# we create the design space for design parameters $x$
+# We want to sample design and uncertain parameters.
+# so, we create the design space for design parameters $x$ and uncertain parameters $u$.
 configure_logger()
 with Path("design_parameters.pkl").open("rb") as f:
     optimized_design_parameters = pickle.load(f)
@@ -93,12 +94,8 @@ scenario = create_scenario(
 for parameter in  output_parameters[1:] :
     scenario.add_observable(parameter)
 # %%
-# Run the sampling scenario
+# We run the sampling scenario
 scenario.execute({"algo": "OT_OPT_LHS", "n_samples": 100})
-
-# %%
-# Lastly,
-# we export the result to an `IODataset`
 dataset = scenario.to_dataset(opt_naming=False)
 dataset
 
@@ -129,7 +126,9 @@ print(rmse.compute_cross_validation_measure())
 
 # %%
 # ## Robust Optimization
-# we create the design space
+# Now we want to minimize the maximum take-off weight even in the worst case scenario of technological parameters.
+# 
+# First, we create the design space
 class MyDesignSpace(DesignSpace):
     def __init__(self):
         super().__init__(name="design_parameters_space")
@@ -153,31 +152,46 @@ class MyUncertainSpace(ParameterSpace):
 uncertain_space = MyUncertainSpace()
 
 # %%
-# we create a `DOEScenario` from the surrogate, the
-# discipline and the design space and parameter space:
+# we create a `UMDOScenario` from the surrogate, the
+# discipline and the design space and parameter space.
+# We used Monte Carlo method to estimate uncertain parameters mean.
 disciplines = [surrogate_discipline]
+"""
 scenario = UMDOScenario(
     disciplines, "DisciplinaryOpt", output_parameters[0], design_space, uncertain_space,
-    objective_statistic_name="Mean", statistic_estimation="Sampling", statistic_estimation_parameters={"n_samples": 30},
+    objective_statistic_name="Margin",
+    statistic_estimation="Sampling", statistic_estimation_parameters={"n_samples": 30},
 )
+"""
+scenario = UMDOScenario(disciplines, "DisciplinaryOpt", "mtow", design_space, uncertain_space, 
+                        objective_statistic_name="Mean", statistic_estimation="Sampling",
+                        statistic_estimation_parameters={
+                            "algo": "OT_MONTE_CARLO",
+                            "n_samples": 500,
+                            "seed": 22
+                        }) 
 
 for parameter in  output_parameters[1:] :
     scenario.add_observable(parameter, statistic_name="Mean")
 
 # %%
 # we then add constraints
-scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200, statistic_name="Mean")
-scenario.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137), statistic_name="Mean")
-scenario.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300), statistic_name="Mean")
-scenario.add_constraint("vz_mcr", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(0), statistic_name="Mean")
-scenario.add_constraint("oei_path", constraint_type="ineq", positive=True, value=0.011, statistic_name="Mean")
-scenario.add_constraint("ttc", constraint_type="ineq", positive=False, value=unit.s_min(25), statistic_name="Mean")
-scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.4, statistic_name="Mean")
+scenario.add_constraint("tofl", constraint_type="ineq", positive=False, value=2200, statistic_name="Margin", factor=2)
+scenario.add_constraint("vapp", constraint_type="ineq", positive=False, value=unit.mps_kt(137), statistic_name="Margin", factor=2)
+scenario.add_constraint("vz_mcl", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(300), statistic_name="Margin", factor=2)
+scenario.add_constraint("vz_mcr", constraint_type="ineq", positive=True, value=unit.mps_ftpmin(0), statistic_name="Margin", factor=2)
+scenario.add_constraint("oei_path", constraint_type="ineq", positive=True, value=0.011, statistic_name="Margin", factor=2)
+scenario.add_constraint("ttc", constraint_type="ineq", positive=False, value=unit.s_min(25), statistic_name="Margin", factor=2)
+scenario.add_constraint("far", constraint_type="ineq", positive=False, value=13.4, statistic_name="Margin", factor=2)
 
 # %%
 # Now,
-# we execute the discipline with a gradient-free optimizer
-scenario.execute({"algo": "NLOPT_COBYLA", "max_iter": 100})
+# we execute the discipline with a nonlinearly constrained gradient-based optimizer
+scenario.set_differentiation_method("finite_differences")
+scenario.execute({"algo": "NLOPT_SLSQP", 
+                  "max_iter": 50, 
+                  "ineq_tolerance": 1e-3,
+                  "ctol_abs": 1e-2})
 
 # %%
 # ## Visualization
@@ -186,7 +200,13 @@ scenario.post_process("OptHistoryView", save=True, show=True)
 
 # %%
 # We can print and draw the optimized aircraft design:
-print(discipline.get_input_data())
-draw_aircraft(discipline.get_input_data(), "The optimized A/C")
+print(surrogate_discipline.get_input_data())
+draw_aircraft(surrogate_discipline.get_input_data(), "The optimized A/C")
+
+# %%
+# and execute the discipline with these values:
+output_dict = discipline.execute(surrogate_discipline.get_input_data())
+for key in output_dict.keys() :
+    print(str(key) + ' : ' + str(output_dict[key][0]))
 
 # %%
